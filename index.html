@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1 Workplace Negotiation Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark-glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+        }
+        .glow-box { animation: pulse-glow 3s infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+
+    <header class="w-full py-4 px-6 border-b border-slate-800 flex justify-between items-center glass text-slate-900 shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="bg-blue-600 text-white font-extrabold px-3 py-1 rounded-xl shadow">A1</span>
+            <h1 class="font-extrabold text-xl tracking-tight text-slate-800">A1 Workplace Negotiation Game</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span id="round-indicator" class="text-sm font-semibold px-3 py-1 bg-slate-200 text-slate-700 rounded-full">Round 1 of 4</span>
+            <button onclick="toggleModal('helpModal')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-slate-700 transition">How to Play</button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-5xl mx-auto w-full">
+        
+        <!-- Welcome / Start Screen -->
+        <div id="start-screen" class="dark-glass border border-slate-700 p-8 rounded-2xl text-center max-w-2xl w-full shadow-2xl space-y-6">
+            <div class="inline-block p-4 bg-blue-600/20 text-blue-400 rounded-full text-4xl mb-2">🤝</div>
+            <h2 class="text-3xl font-bold tracking-tight text-white">Workplace Negotiation & Teamwork</h2>
+            <p class="text-slate-300 text-base leading-relaxed">
+                Work with your partner to divide office tasks using easy English! Read the situation, press <kbd class="bg-slate-700 px-2 py-1 rounded text-yellow-400 font-mono text-sm">Space</kbd> or click to see your student role cards, and decide who does what.
+            </p>
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-lg rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
+                Start Game 🚀
+            </button>
+        </div>
+
+        <!-- Game Round Container (Hidden initially) -->
+        <div id="game-container" class="hidden w-full flex flex-col items-center space-y-6">
+            
+            <!-- STEP 1: Shared Situation Box (Big Font) -->
+            <div id="situation-view" class="w-full bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border-2 border-blue-500/50 p-8 rounded-3xl shadow-2xl glow-box flex flex-col items-center text-center space-y-4">
+                <span class="text-xs uppercase tracking-widest bg-blue-500 text-white px-3 py-1 rounded-full font-bold">Part 1: Shared Situation & Tasks</span>
+                <h3 id="sit-title" class="text-2xl md:text-3xl font-extrabold text-blue-200"></h3>
+                <p id="sit-desc" class="text-xl md:text-2xl text-white font-medium max-w-3xl leading-relaxed py-2"></p>
+                <div class="mt-4 bg-blue-950/80 border border-blue-400/30 px-6 py-3 rounded-2xl w-full max-w-2xl">
+                    <p class="text-sm text-blue-300 font-semibold mb-2">Tasks to divide:</p>
+                    <div id="sit-tasks" class="flex flex-wrap justify-center gap-2"></div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Role Cards Section (Appears after second Space / button click) -->
+            <div id="roles-view" class="hidden w-full space-y-6">
+                <!-- Reminder of Situation (Smaller) -->
+                <div class="dark-glass border border-slate-700 p-4 rounded-2xl flex justify-between items-center text-sm">
+                    <div>
+                        <span class="text-blue-400 font-bold">Situation:</span> <span id="reminder-title" class="text-slate-200"></span>
+                    </div>
+                    <button onclick="resetToPart1()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg">🔍 Zoom Situation</button>
+                </div>
+
+                <!-- Role Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <!-- Student A Card -->
+                    <div class="dark-glass border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-col justify-between space-y-4 border-t-4 border-t-blue-500">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-xl font-bold text-white flex items-center space-x-2"><span>👤</span> <span>Student A</span></h4>
+                                <span class="bg-blue-900/60 text-blue-300 text-xs px-2.5 py-1 rounded-full font-semibold">Role Card A</span>
+                            </div>
+                            <p id="char-a-desc" class="text-slate-300 text-sm mb-4 bg-slate-900/50 p-3 rounded-xl"></p>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">❤️ Likes (Easy for me):</span>
+                                    <ul id="char-a-likes" class="list-disc list-inside text-sm text-slate-200 mt-1 space-y-1"></ul>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-rose-400 uppercase tracking-wider">❌ Dislikes (Hard for me):</span>
+                                    <ul id="char-a-dislikes" class="list-disc list-inside text-sm text-slate-200 mt-1 space-y-1"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student B Card -->
+                    <div class="dark-glass border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-col justify-between space-y-4 border-t-4 border-t-indigo-500">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-xl font-bold text-white flex items-center space-x-2"><span>👤</span> <span>Student B</span></h4>
+                                <span class="bg-indigo-900/60 text-indigo-300 text-xs px-2.5 py-1 rounded-full font-semibold">Role Card B</span>
+                            </div>
+                            <p id="char-b-desc" class="text-slate-300 text-sm mb-4 bg-slate-900/50 p-3 rounded-xl"></p>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">❤️ Likes (Easy for me):</span>
+                                    <ul id="char-b-likes" class="list-disc list-inside text-sm text-slate-200 mt-1 space-y-1"></ul>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-rose-400 uppercase tracking-wider">❌ Dislikes (Hard for me):</span>
+                                    <ul id="char-b-dislikes" class="list-disc list-inside text-sm text-slate-200 mt-1 space-y-1"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex justify-between items-center pt-4">
+                    <button onclick="prevRound()" id="prev-btn" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition">
+                        ⬅️ Previous Round
+                    </button>
+                    <button onclick="nextRound()" id="next-btn" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm shadow transition">
+                        Next Round ➔
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="hidden dark-glass border border-slate-700 p-8 rounded-2xl text-center max-w-xl w-xl shadow-2xl space-y-6">
+            <div class="text-5xl">🏆</div>
+            <h2 class="text-3xl font-bold text-white">Great Job!</h2>
+            <p class="text-slate-300 text-sm">You finished all rounds and practiced dividing office tasks in English!</p>
+            <button onclick="restartGame()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition">
+                Play Again 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <div id="helpModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="dark-glass border border-slate-700 max-w-md w-full p-6 rounded-2xl space-y-4 shadow-2xl relative text-slate-200">
+            <h3 class="text-xl font-bold text-white">How to Play (A1 Friendly)</h3>
+            <ul class="list-disc list-inside space-y-2 text-sm text-slate-300">
+                <li>Each round has <strong class="text-blue-400">Two Parts</strong>.</li>
+                <li><strong>Part 1:</strong> Press <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-yellow-300">Space</kbd> to open the big <strong>Situation Box</strong>. Read the task together!</li>
+                <li><strong>Part 2:</strong> Press <kbd class="bg-slate-800 px-1.5 py-0.5 rounded text-yellow-300">Space</kbd> again to see Student A and Student B role cards.</li>
+                <li>Talk with your partner: Use <em class="text-blue-300">"Shall I do...?"</em> or <em class="text-blue-300">"Can you help with...?"</em></li>
+            </ul>
+            <div class="text-right pt-2">
+                <button onclick="toggleModal('helpModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API background sound generator for spacebar / round changes
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playChimeSound() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5 note
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // Updated rounds featuring requested specific office tasks with simplified vocabulary and specific entities replacing "someone"
+        const rounds = [
+            {
+                title: "Round 1: Important Meeting Prep 🏢",
+                situation: "An important client is visiting our office today. We need to prepare the room and the equipment.",
+                tasks: ["Set up equipment", "Get tea and coffee ready for the meeting room", "Take notes in the meeting", "Show the presentation to the client"],
+                studentA: {
+                    desc: "You are great with technology and hospitality, and you like welcoming guests.",
+                    likes: ["Set up equipment", "Get tea and coffee ready for the meeting room"],
+                    dislikes: ["Take notes in the meeting", "Show the presentation to the client"]
+                },
+                studentB: {
+                    desc: "You like public speaking and writing down important meeting details.",
+                    likes: ["Take notes in the meeting", "Show the presentation to the client"],
+                    dislikes: ["Set up equipment", "Get tea and coffee ready for the meeting room"]
+                }
+            },
+            {
+                title: "Round 2: Airport Pickup & Dropoff 🚗",
+                situation: "Our company director is flying in for a brief visit. We need to arrange transportation and marketing materials.",
+                tasks: ["Collect the director from the airport", "Take the director back to the airport", "Print flyers", "Write a report"],
+                studentA: {
+                    desc: "You love driving and meeting people at arrivals, but you dislike office desk paperwork.",
+                    likes: ["Collect the director from the airport", "Take the director back to the airport"],
+                    dislikes: ["Print flyers", "Write a report"]
+                },
+                studentB: {
+                    desc: "You prefer working inside the office on design, printing, and summary writing.",
+                    likes: ["Print flyers", "Write a report"],
+                    dislikes: ["Collect the director from the airport", "Take the director back to the airport"]
+                }
+            },
+            {
+                title: "Round 3: Daily Office Communications 📞",
+                situation: "It is a very busy morning with phone calls and incoming messages from clients. Let's share the communication duties.",
+                tasks: ["Answer emails", "Take important calls", "Write a report", "Print out letters"],
+                studentA: {
+                    desc: "You enjoy talking on the phone and dealing with urgent customer requests.",
+                    likes: ["Take important calls", "Answer emails"],
+                    dislikes: ["Write a report", "Print out letters"]
+                },
+                studentB: {
+                    desc: "You like quiet administrative tasks like document writing and letter preparation.",
+                    likes: ["Write a report", "Print out letters"],
+                    dislikes: ["Take important calls", "Answer emails"]
+                }
+            },
+            {
+                title: "Round 4: Conference Setup 🎤",
+                situation: "We are hosting a small company workshop this afternoon and need everything ready on time.",
+                tasks: ["Set up equipment", "Show the presentation to attendees", "Get tea and coffee ready for the meeting room", "Print flyers"],
+                studentA: {
+                    desc: "You enjoy setting up projectors, screens, and showing presentations to participants.",
+                    likes: ["Set up equipment", "Show the presentation to attendees"],
+                    dislikes: ["Get tea and coffee ready for the meeting room", "Print flyers"]
+                },
+                studentB: {
+                    desc: "You like organizing refreshments and preparing paper handouts for attendees.",
+                    likes: ["Get tea and coffee ready for the meeting room", "Print flyers"],
+                    dislikes: ["Set up equipment", "Show the presentation to attendees"]
+                }
+            }
+        ];
+
+        let currentRoundIndex = 0;
+        let currentPart = 1; // 1 = Situation only, 2 = Situation + Roles
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+        }
+
+        function startGame() {
+            playChimeSound();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            currentRoundIndex = 0;
+            currentPart = 1;
+            loadRoundData();
+        }
+
+        function loadRoundData() {
+            const r = rounds[currentRoundIndex];
+            document.getElementById('round-indicator').innerText = `Round ${currentRoundIndex + 1} of ${rounds.length}`;
+            
+            // Situation view content
+            document.getElementById('sit-title').innerText = r.title;
+            document.getElementById('sit-desc').innerText = r.situation;
+            document.getElementById('reminder-title').innerText = r.title;
+            
+            const tasksContainer = document.getElementById('sit-tasks');
+            tasksContainer.innerHTML = r.tasks.map(t => `<span class="bg-blue-600/40 text-blue-200 px-3 py-1 rounded-lg text-xs font-semibold">✓ ${t}</span>`).join('');
+
+            // Student A
+            document.getElementById('char-a-desc').innerText = r.studentA.desc;
+            document.getElementById('char-a-likes').innerHTML = r.studentA.likes.map(l => `<li>${l}</li>`).join('');
+            document.getElementById('char-a-dislikes').innerHTML = r.studentA.dislikes.map(d => `<li>${d}</li>`).join('');
+
+            // Student B
+            document.getElementById('char-b-desc').innerText = r.studentB.desc;
+            document.getElementById('char-b-likes').innerHTML = r.studentB.likes.map(l => `<li>${l}</li>`).join('');
+            document.getElementById('char-b-dislikes').innerHTML = r.studentB.dislikes.map(d => `<li>${d}</li>`).join('');
+
+            updatePartView();
+        }
+
+        function updatePartView() {
+            const sitView = document.getElementById('situation-view');
+            const rolesView = document.getElementById('roles-view');
+
+            if (currentPart === 1) {
+                sitView.classList.remove('hidden');
+                rolesView.classList.add('hidden');
+            } else {
+                sitView.classList.add('hidden');
+                rolesView.classList.remove('hidden');
+            }
+        }
+
+        function advanceRoundPart() {
+            playChimeSound();
+            if (currentPart === 1) {
+                currentPart = 2;
+                updatePartView();
+            } else {
+                // If already on Part 2, move to next round if available
+                if (currentRoundIndex < rounds.length - 1) {
+                    currentRoundIndex++;
+                    currentPart = 1;
+                    loadRoundData();
+                } else {
+                    showEndScreen();
+                }
+            }
+        }
+
+        function resetToPart1() {
+            playChimeSound();
+            currentPart = 1;
+            updatePartView();
+        }
+
+        function nextRound() {
+            playChimeSound();
+            if (currentRoundIndex < rounds.length - 1) {
+                currentRoundIndex++;
+                currentPart = 1;
+                loadRoundData();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        function prevRound() {
+            playChimeSound();
+            if (currentPart === 2) {
+                currentPart = 1;
+                updatePartView();
+            } else if (currentRoundIndex > 0) {
+                currentRoundIndex--;
+                currentPart = 2;
+                loadRoundData();
+            }
+        }
+
+        function showEndScreen() {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('round-indicator').innerText = "Complete!";
+        }
+
+        function restartGame() {
+            playChimeSound();
+            document.getElementById('end-screen').classList.add('hidden');
+            startGame();
+        }
+
+        // Spacebar listener for two-part round progression and background audio trigger
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && document.getElementById('game-container') && !document.getElementById('game-container').classList.contains('hidden')) {
+                // Prevent default scrolling on spacebar press
+                e.preventDefault();
+                advanceRoundPart();
+            }
+        });
+    </script>
+</body>
+</html>
